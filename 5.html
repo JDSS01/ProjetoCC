@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão Financeira</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/lucide-icons@0.18.0/dist/index.min.js"></script>
+    <style>
+        .alert {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+<!-- Botões Centrais -->
+                    <div class="d-flex justify-content-around mt-4">
+                        <a href="5.html" class="btn btn-primary btn-lg">Financeiro</a>
+                        <a href="6.html" class="btn btn-success btn-lg">Extrato</a>
+                        <a href="3.html" class="btn btn-warning btn-lg">Usuário</a>
+                    </div>
+    <div class="container py-5">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="h4">Gestão Financeira</h2>
+            </div>
+            <div class="card-body">
+                <ul class="nav nav-tabs" id="tabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link active" id="lancamentos-tab" data-bs-toggle="tab" href="#lancamentos" role="tab" aria-controls="lancamentos" aria-selected="true">Lançamentos</a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" id="bancos-tab" data-bs-toggle="tab" href="#bancos" role="tab" aria-controls="bancos" aria-selected="false">Bancos</a>
+                    </li>
+                </ul>
+
+                <div class="tab-content mt-3">
+                    <div class="tab-pane fade show active" id="lancamentos" role="tabpanel" aria-labelledby="lancamentos-tab">
+                        <h3 class="text-lg font-semibold mb-4">Registrar Lançamento</h3>
+                        <div class="alert alert-success" id="alert-lancamento" role="alert">
+                            Lançamento registrado com sucesso!
+                        </div>
+                        <form id="form-lancamento">
+                            <div class="mb-3">
+                                <label for="data" class="form-label">Data</label>
+                                <input type="date" class="form-control" id="data" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="valor" class="form-label">Valor</label>
+                                <input type="number" class="form-control" id="valor" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="banco" class="form-label">Banco</label>
+                                <select class="form-select" id="banco" required>
+                                    <option value="itau">Itaú</option>
+                                    <option value="bradesco">Bradesco</option>
+                                    <option value="santander">Santander</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="tipo" class="form-label">Tipo de Lançamento</label>
+                                <select class="form-select" id="tipo" required>
+                                    <option value="receita">Receita</option>
+                                    <option value="despesa">Despesa</option>
+                                    <option value="outros">Outros</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="descricao" class="form-label">Descrição</label>
+                                <textarea class="form-control" id="descricao" rows="3" placeholder="Descrição do lançamento (opcional)"></textarea>
+                            </div>
+                            <div id="subtipo-fields"></div>
+                            <button type="submit" class="btn btn-success">Registrar Lançamento</button>
+                        </form>
+
+                        <h4 class="mt-5">Últimos Lançamentos</h4>
+                        <div id="entries-list"></div>
+                    </div>
+
+                    <div class="tab-pane fade" id="bancos" role="tabpanel" aria-labelledby="bancos-tab">
+                        <h3 class="text-lg font-semibold mb-4">Cadastro de Bancos</h3>
+                        <div class="alert alert-success" id="alert-banco" role="alert">
+                            Banco cadastrado com sucesso!
+                        </div>
+                        <form id="form-banco">
+                            <div class="mb-3">
+                                <label for="banco-name" class="form-label">Banco</label>
+                                <input type="text" class="form-control" id="banco-name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="conta" class="form-label">Conta</label>
+                                <input type="text" class="form-control" id="conta" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="agencia" class="form-label">Agência</label>
+                                <input type="text" class="form-control" id="agencia" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Cadastrar Banco</button>
+                        </form>
+
+                        <h4 class="mt-5">Bancos Cadastrados</h4>
+                        <div id="banks-list"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Handle banco registration
+        const banks = [];
+        const formBanco = document.getElementById('form-banco');
+        const bancoNameInput = document.getElementById('banco-name');
+        const contaInput = document.getElementById('conta');
+        const agenciaInput = document.getElementById('agencia');
+        const banksList = document.getElementById('banks-list');
+        const alertBanco = document.getElementById('alert-banco');
+
+        formBanco.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const banco = bancoNameInput.value;
+            const conta = contaInput.value;
+            const agencia = agenciaInput.value;
+
+            banks.push({ banco, conta, agencia });
+
+            bancoNameInput.value = '';
+            contaInput.value = '';
+            agenciaInput.value = '';
+
+            displayBanks();
+            showAlert(alertBanco);
+        });
+
+        function displayBanks() {
+            banksList.innerHTML = '';
+            banks.forEach((bank, index) => {
+                const div = document.createElement('div');
+                div.classList.add('card', 'mb-3');
+                div.innerHTML = `
+                    <div class="card-body">
+                        <strong>Banco:</strong> ${bank.banco} <br>
+                        <strong>Conta:</strong> ${bank.conta} <br>
+                        <strong>Agência:</strong> ${bank.agencia}
+                    </div>
+                `;
+                banksList.appendChild(div);
+            });
+        }
+
+        // Handle lancamento registration
+        const entries = [];
+        const formLancamento = document.getElementById('form-lancamento');
+        const dataInput = document.getElementById('data');
+        const valorInput = document.getElementById('valor');
+        const bancoSelect = document.getElementById('banco');
+        const tipoSelect = document.getElementById('tipo');
+        const descricaoInput = document.getElementById('descricao');
+        const alertLancamento = document.getElementById('alert-lancamento');
+        const entriesList = document.getElementById('entries-list');
+        const subtipoFields = document.getElementById('subtipo-fields');
+
+        formLancamento.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const data = dataInput.value;
+            const valor = valorInput.value;
+            const banco = bancoSelect.value;
+            const tipo = tipoSelect.value;
+            const descricao = descricaoInput.value;
+            const id = Date.now();
+
+            entries.push({ data, valor, banco, tipo, descricao, id });
+
+            dataInput.value = '';
+            valorInput.value = '';
+            bancoSelect.value = '';
+            tipoSelect.value = 'receita';
+            descricaoInput.value = '';
+
+            displayEntries();
+            showAlert(alertLancamento);
+        });
+
+        tipoSelect.addEventListener('change', updateSubtypeFields);
+
+        function updateSubtypeFields() {
+            const tipo = tipoSelect.value;
+            let fields = '';
+            if (tipo === 'receita') {
+                fields = `
+                    <label class="form-label">Tipo de Receita</label>
+                    <select class="form-select" id="subtipo-receita">
+                        <option value="doacao">Doação</option>
+                        <option value="evento">Evento</option>
+                        <option value="vendas">Vendas</option>
+                    </select>
+                `;
+            } else if (tipo === 'despesa') {
+                fields = `
+                    <label class="form-label">Tipo de Despesa</label>
+                    <select class="form-select" id="subtipo-despesa">
+                        <option value="contas">Contas Mensais</option>
+                        <option value="manutencao">Manutenção</option>
+                        <option value="investimento">Investimento</option>
+                    </select>
+                `;
+            } else if (tipo === 'outros') {
+                fields = `
+                    <label class="form-label">Descrição</label>
+                    <textarea class="form-control" id="descricao-outros" rows="3"></textarea>
+                `;
+            }
+            subtipoFields.innerHTML = fields;
+        }
+
+        function displayEntries() {
+            entriesList.innerHTML = '';
+            entries.forEach(entry => {
+                const div = document.createElement('div');
+                div.classList.add('card', 'mb-3');
+                div.innerHTML = `
+                    <div class="card-body">
+                        <strong>Data:</strong> ${entry.data} <br>
+                        <strong>Valor:</strong> R$ ${entry.valor} <br>
+                        <strong>Banco:</strong> ${entry.banco} <br>
+                        <strong>Tipo:</strong> ${entry.tipo} <br>
+                        <strong>Descrição:</strong> ${entry.descricao}
+                    </div>
+                `;
+                entriesList.appendChild(div);
+            });
+        }
+
+        function showAlert(alertElement) {
+            alertElement.style.display = 'block';
+            setTimeout(() => {
+                alertElement.style.display = 'none';
+            }, 3000);
+        }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

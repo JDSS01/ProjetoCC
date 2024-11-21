@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Extrato de Movimentações</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .card {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+      padding: 20px;
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .card-header h2 {
+      font-size: 24px;
+      font-weight: bold;
+    }
+    .button {
+      padding: 8px 16px;
+      border-radius: 4px;
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .button.green { background-color: #28a745; }
+    .button.green:hover { background-color: #218838; }
+    .button.red { background-color: #dc3545; }
+    .button.red:hover { background-color: #c82333; }
+    .button.blue { background-color: #007bff; }
+    .button.blue:hover { background-color: #0056b3; }
+    .input {
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      width: 100%;
+    }
+    .select {
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      width: 100%;
+    }
+    .select option {
+      padding: 8px;
+    }
+    .summary-card {
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      color: white;
+    }
+    .summary-card h3 {
+      font-size: 16px;
+      font-weight: medium;
+    }
+    .summary-card p {
+      font-size: 24px;
+      font-weight: bold;
+    }
+    .summary-card.bg-blue { background-color: #007bff; }
+    .summary-card.bg-green { background-color: #28a745; }
+    .summary-card.bg-red { background-color: #dc3545; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+    }
+    th {
+      background-color: #f4f4f4;
+    }
+    td.text-right {
+      text-align: right;
+    }
+    .positive {
+      color: green;
+    }
+    .negative {
+      color: red;
+    }
+    .pagination {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .pagination button {
+      padding: 6px 12px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      cursor: pointer;
+    }
+    .pagination button:hover {
+      background-color: #f1f1f1;
+    }
+  </style>
+</head>
+<body>
+<!-- Botões Centrais -->
+                    <div class="d-flex justify-content-around mt-4">
+                        <a href="5.html" class="btn btn-primary btn-lg">Financeiro</a>
+                        <a href="6.html" class="btn btn-success btn-lg">Extrato</a>
+                        <a href="3.html" class="btn btn-warning btn-lg">Usuário</a>
+                    </div>
+  <div class="container">
+    <!-- Card Principal -->
+    <div class="card">
+      <!-- Cabeçalho do Card -->
+      <div class="card-header">
+        <h2>Extrato de Movimentações</h2>
+        <div>
+          <button class="button green" onclick="exportToExcel()">Exportar para Excel</button>
+          <button class="button red" onclick="exportToPDF()">Exportar para PDF</button>
+        </div>
+      </div>
+
+      <!-- Filtros -->
+      <div class="filter-section">
+        <h3>Filtros</h3>
+        <div>
+          <label for="startDate">Data Inicial</label>
+          <input type="date" id="startDate" class="input">
+        </div>
+        <div>
+          <label for="endDate">Data Final</label>
+          <input type="date" id="endDate" class="input">
+        </div>
+        <div>
+          <label for="type">Tipo</label>
+          <select id="type" class="select">
+            <option value="">Todos</option>
+            <option value="receita">Receita</option>
+            <option value="despesa">Despesa</option>
+          </select>
+        </div>
+        <div>
+          <label for="bank">Banco</label>
+          <select id="bank" class="select">
+            <option value="">Todos</option>
+            <option value="itau">Itaú</option>
+            <option value="bradesco">Bradesco</option>
+            <option value="santander">Santander</option>
+          </select>
+        </div>
+        <div>
+          <button class="button blue" onclick="filterTransactions()">Filtrar</button>
+        </div>
+      </div>
+
+      <!-- Resumo -->
+      <div class="summary-section">
+        <div class="summary-card bg-blue">
+          <h3>Saldo Total</h3>
+          <p id="totalBalance">R$ 0,00</p>
+        </div>
+        <div class="summary-card bg-green">
+          <h3>Total Receitas</h3>
+          <p id="totalReceitas">R$ 0,00</p>
+        </div>
+        <div class="summary-card bg-red">
+          <h3>Total Despesas</h3>
+          <p id="totalDespesas">R$ 0,00</p>
+        </div>
+      </div>
+
+      <!-- Tabela de Transações -->
+      <table id="transactionsTable">
+        <thead>
+          <tr>
+            <th>Banco</th>
+            <th>Data</th>
+            <th>Tipo</th>
+            <th class="text-right">Valor</th>
+            <th>Descrição</th>
+            <th class="text-right">Saldo</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Linhas de transações serão inseridas aqui pelo JS -->
+        </tbody>
+      </table>
+
+      <!-- Paginação -->
+      <div class="pagination">
+        <span id="paginationInfo">Mostrando 0 transações</span>
+        <div>
+          <button onclick="previousPage()">Anterior</button>
+          <button onclick="nextPage()">Próxima</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Dados simulados
+    const transacoes = [
+      { id: 1, data: '2024-11-19', tipo: 'receita', subtipo: 'inicial', descricao: 'Valor inicial', valor: 50.00, banco: 'Itaú', saldo: 50.00 },
+      { id: 2, data: '2024-03-15', tipo: 'receita', subtipo: 'doacao', descricao: 'Doação mensal', valor: 1000.00, banco: 'Itaú', saldo: 1000.00 },
+      { id: 3, data: '2024-03-16', tipo: 'despesa', subtipo: 'contas', descricao: 'Conta de luz', valor: -200.00, banco: 'Itaú', saldo: 800.00 },
+      // Adicione mais transações conforme necessário
+    ];
+
+    let filteredTransactions = [...transacoes];
+
+    // Funções de exportação (mock)
+    function exportToExcel() {
+      alert('Exportando para Excel...');
+    }
+
+    function exportToPDF() {
+      alert('Exportando para PDF...');
+    }
+
+    // Função de filtragem
+    function filterTransactions() {
+      const startDate = document.getElementById('startDate').value;
+      const endDate = document.getElementById('endDate').value;
+      const type = document.getElementById('type').value;
+      const bank = document.getElementById('bank').value;
+
+      filteredTransactions = transacoes.filter(transaction => {
+        const dateMatch = (!startDate || transaction.data >= startDate) && (!endDate || transaction.data <= endDate);
+        const typeMatch = !type || transaction.tipo === type;
+        const bankMatch = !bank || transaction.banco === bank;
+        return dateMatch && typeMatch && bankMatch;
+      });
+
+      updateTable();
+    }
+
+    // Atualiza a tabela de transações
+    function updateTable() {
+      const tableBody = document.querySelector('#transactionsTable tbody');
+      tableBody.innerHTML = ''; // Limpa a tabela antes de atualizar
+
+      let totalBalance = 0, totalReceitas = 0, totalDespesas = 0;
+
+      filteredTransactions.forEach(transaction => {
+        const row = document.createElement('tr');
+        
+        // Adiciona as classes de cor para valor
+        const valorClass = transaction.valor >= 0 ? 'positive' : 'negative';
+
+        row.innerHTML = `
+          <td>${transaction.banco}</td>
+          <td>${new Date(transaction.data).toLocaleDateString('pt-BR')}</td>
+          <td>${transaction.tipo === 'receita' ? 'Receita' : 'Despesa'}</td>
+          <td class="text-right ${valorClass}">${transaction.valor.toFixed(2).replace('.', ',')}</td>
+          <td>${transaction.descricao}</td>
+          <td class="text-right">${transaction.saldo.toFixed(2).replace('.', ',')}</td>
+        `;
+        tableBody.appendChild(row);
+
+        // Atualiza os totais de saldo, receitas e despesas
+        if (transaction.tipo === 'receita') {
+          totalReceitas += transaction.valor;
+        } else if (transaction.tipo === 'despesa') {
+          totalDespesas += transaction.valor;
+        }
+        totalBalance = totalReceitas + totalDespesas;
+      });
+
+      // Atualiza os valores nos cards de resumo
+      document.getElementById('totalBalance').textContent = `R$ ${totalBalance.toFixed(2).replace('.', ',')}`;
+      document.getElementById('totalReceitas').textContent = `R$ ${totalReceitas.toFixed(2).replace('.', ',')}`;
+      document.getElementById('totalDespesas').textContent = `R$ ${totalDespesas.toFixed(2).replace('.', ',')}`;
+
+      // Atualiza a quantidade de transações mostradas
+      document.getElementById('paginationInfo').textContent = `Mostrando ${filteredTransactions.length} transações`;
+    }
+
+    // Funções de navegação na página (paginação)
+    let currentPage = 1;
+    const itemsPerPage = 5;
+
+    function paginate() {
+      const start = (currentPage - 1) * itemsPerPage;
+      const end = start + itemsPerPage;
+      filteredTransactions.slice(start, end);
+      updateTable();
+    }
+
+    function previousPage() {
+      if (currentPage > 1) {
+        currentPage--;
+        paginate();
+      }
+    }
+
+    function nextPage() {
+      const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage);
+      if (currentPage < totalPages) {
+        currentPage++;
+        paginate();
+      }
+    }
+
+    // Inicializa a tabela ao carregar
+    window.onload = function() {
+      updateTable();
+    }
+  </script>
+</body>
+</html>
